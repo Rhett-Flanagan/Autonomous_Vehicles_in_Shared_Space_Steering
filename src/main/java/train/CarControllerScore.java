@@ -29,12 +29,12 @@ public class CarControllerScore implements CalculateScore, Serializable {
      */
     public double calculateScore(MLMethod method){
         NEATNetwork network = (NEATNetwork) method; // The "ML" method passed here should apparently be the network, not the genome
-        Trial trial = new Trial(parameters, SerializationUtils.serialize(network));
 
         double average = 0;
 
         for(int i = 0; i < numSims; i++){
             try {
+                Trial trial = new Trial(parameters, SerializationUtils.serialize(network));
                 trial.setupSim();
                 average += trial.runSimulation();
             } catch (IOException e) {
@@ -53,9 +53,9 @@ public class CarControllerScore implements CalculateScore, Serializable {
     }
 
     /**
-     * @return Always true for now, will see if parralel implementation is feasable
+     * @return Always true for now, will see if parallel implementation is feasible
      */
     public boolean requireSingleThreaded(){
-        return true;
+        return false;
     }
 }

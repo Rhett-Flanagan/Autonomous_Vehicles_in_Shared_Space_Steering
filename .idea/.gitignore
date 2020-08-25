@@ -1,0 +1,8 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Datasource local storage ignored files
+/../../../../../../../../../:\Rhett\OneDrive - University of Cape Town\UCT 2020\CSC4018Z Project\Project Code\Attachments-Adapting IntersectionSimulator to work with Shared Space\Simulator\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/

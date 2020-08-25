@@ -85,7 +85,7 @@ public class Trial {
     public Trial(String parameters, byte[] serializedNetwork) {
         JSONObject jsonParameters = new JSONObject(parameters);
         this.serializedNetwork = serializedNetwork;
-        seed = jsonParameters.getInt("seed");
+        seed = (int)(Math.random() * 1000);//jsonParameters.getInt("seed");
         trackFile = jsonParameters.getString("track");
         simulationSteps = jsonParameters.getInt("steps");
         JSONObject spawner = jsonParameters.getJSONObject("spawner");

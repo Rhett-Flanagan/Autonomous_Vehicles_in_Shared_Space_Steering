@@ -39,32 +39,34 @@ public class Main {
 
         // Train
         final EvolutionaryAlgorithm train = NEATUtil.constructNEATTrainer(population, score);
+        System.out.println("Loading complete, beginning training.");
         for(int i = 0; i < iterations; i++){
             train.iteration();
-            System.out.println("Epoch #" + train.getIteration() + " Error:" + train.getError()+ ", Species:" + population.getSpecies().size());
+            System.out.println("Epoch #" + train.getIteration() + ", Collisions:" + train.getError()+ ", Species:" + population.getSpecies().size());
         }
 
         // Retrieve and save the best network
         NEATNetwork network = (NEATNetwork)train.getCODEC().decode((train.getBestGenome()));
-        Trial trial = new Trial(parameters, SerializationUtils.serialize(network));
-        for(int i = 0; i < 10; i++){
-            trial.setupSim();
-            int collisions = trial.runSimulation();
-            System.out.println("Run " + (i + 1) + " collisions: " + collisions);
-        }
+        Encog.getInstance().shutdown();
+//        Trial trial = new Trial(parameters, SerializationUtils.serialize(network));
+//        for(int i = 0; i < 10; i++){
+//            trial.setupSim();
+//            int collisions = trial.runSimulation();
+//            System.out.println("Run " + (i + 1) + " collisions: " + collisions);
+//        }
 
         // Save the network and parameters
         JSONObject jsonParameters = new JSONObject(parameters);
-        jsonParameters.remove("neural_network");
+        //jsonParameters.remove("neural_network");
         jsonParameters.put("neural_network", new JSONArray(SerializationUtils.serialize(network)));
 
-        try(FileWriter file = new FileWriter(args[4])){
+        try(FileWriter file = new FileWriter(args[0].substring(0, args[0].length() - 5)+ "_network.json")){
             file.write(jsonParameters.toString());
             file.flush();
         }catch (IOException e){
             e.printStackTrace();
         }
 
-        Encog.getInstance().shutdown();
+
     }
 }
