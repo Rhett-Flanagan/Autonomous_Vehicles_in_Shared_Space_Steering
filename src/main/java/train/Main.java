@@ -32,7 +32,7 @@ public class Main {
         int sims = Integer.parseInt(args[3]);
 
         // Setup trainer
-        NEATPopulation population = new NEATPopulation(14, 2, popSize);
+        NEATPopulation population = new NEATPopulation(18, 2, popSize);
         population.setInitialConnectionDensity(1.0);// not required, but speeds training
         population.reset();
         CarControllerScore score = new CarControllerScore(parameters, sims);
@@ -60,7 +60,7 @@ public class Main {
         //jsonParameters.remove("neural_network");
         jsonParameters.put("neural_network", new JSONArray(SerializationUtils.serialize(network)));
 
-        try(FileWriter file = new FileWriter(args[0].substring(0, args[0].length() - 5)+ "_network.json")){
+        try(FileWriter file = new FileWriter("out/" + args[0].substring(0, args[0].length() - 5)+ "_network.json")){
             file.write(jsonParameters.toString());
             file.flush();
         }catch (IOException e){

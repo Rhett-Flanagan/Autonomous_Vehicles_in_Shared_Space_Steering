@@ -9,12 +9,12 @@ import java.util.ArrayList;
 
 public class PedestrianSpawner extends Actor {
 
-    private int simulationSteps;
+    private final int simulationSteps;
     private int steps;
     private int counter;
-    private int pedestrianRate;
-    private float pedestrianRandomness;
-    private boolean pedestriansEnabled;
+    private final int pedestrianRate;
+    private final float pedestrianRandomness;
+    private final boolean pedestriansEnabled;
 
     public PedestrianSpawner(Simulator simulator, Node firstTarget, int simulationSteps, int pedestrianRate, float pedestrianRandomness) {
         super(simulator, firstTarget);

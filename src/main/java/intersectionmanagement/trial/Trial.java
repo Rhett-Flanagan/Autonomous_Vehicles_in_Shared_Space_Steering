@@ -2,7 +2,9 @@ package intersectionmanagement.trial;
 
 import intersectionmanagement.simulator.Actor;
 import intersectionmanagement.simulator.Simulator;
+import intersectionmanagement.simulator.Utility;
 import intersectionmanagement.simulator.car.Car;
+import intersectionmanagement.simulator.obstacle.Obstacle;
 import intersectionmanagement.simulator.pedestrian.Pedestrian;
 import intersectionmanagement.simulator.spawner.CarSpawner;
 import intersectionmanagement.simulator.spawner.PedestrianSpawner;
@@ -25,17 +27,17 @@ public class Trial {
     // CLI option for LWJGL
     //-Djava.library.path=Trial/target/natives
 
-    private int seed;
-    private String trackFile;
-    private SpawnerFactory spawnerFactory;
-    private int simulationSteps;
-    private byte[] serializedNetwork;
+    private final int seed;
+    private final String trackFile;
+    private final SpawnerFactory spawnerFactory;
+    private final int simulationSteps;
+    private final byte[] serializedNetwork;
 
-    private int pedestrianRate;
-    private float pedestrianRandomness;
+    private final int pedestrianRate;
+    private final float pedestrianRandomness;
 
     private Simulator sim;
-    private List<Node>  track;
+    private List<Node> track;
 
     private boolean simulating = true;
 
@@ -85,7 +87,7 @@ public class Trial {
     public Trial(String parameters, byte[] serializedNetwork) {
         JSONObject jsonParameters = new JSONObject(parameters);
         this.serializedNetwork = serializedNetwork;
-        seed = (int)(Math.random() * 1000);//jsonParameters.getInt("seed");
+        seed = (int) (Math.random() * 1000);//jsonParameters.getInt("seed");
         trackFile = jsonParameters.getString("track");
         simulationSteps = jsonParameters.getInt("steps");
         JSONObject spawner = jsonParameters.getJSONObject("spawner");
@@ -131,6 +133,20 @@ public class Trial {
         for (Node startNode : pedestrianTrack) {
             sim.addActor(new PedestrianSpawner(sim, startNode, simulationSteps, pedestrianRate, pedestrianRandomness));
         }
+
+        addObstacles();
+    }
+
+    public void addObstacles() throws IOException {
+        JSONObject trackJSON = new JSONObject(Utility.loadResource(trackFile));
+        if (trackJSON.has("obstacles")) {
+            JSONArray obstacles = trackJSON.getJSONArray("obstacles");
+            Node startNode = track.get(0);
+            for (Object obstacleJSON : obstacles) {
+                JSONObject obstacle = (JSONObject) obstacleJSON;
+                sim.addActor(new Obstacle(sim, startNode, obstacle.getFloat("x"), obstacle.getFloat("y"), obstacle.getFloat("radius")));
+            }
+        }
     }
 
     public int runSimulation() throws IOException {
@@ -146,6 +162,7 @@ public class Trial {
     public void runSimulationRendered() throws LWJGLException, IOException {
         ArrayList<Car> cars = new ArrayList<>();
         ArrayList<Pedestrian> pedestrians = new ArrayList<>();
+        ArrayList<Obstacle> obstacles = new ArrayList<>();
         Renderer.setupWindow("*", this, 4, 800, 800, serializedNetwork);
         setupSim();
 
@@ -154,8 +171,9 @@ public class Trial {
                 sim.step();
                 cars = sim.getCars();
                 pedestrians = sim.getPedestrians();
+                obstacles = sim.getObstacles();
             }
-            Renderer.drawActors(cars, pedestrians, track);
+            Renderer.drawActors(cars, pedestrians, obstacles, track);
             Renderer.handleInput(cars);
 
             if (Display.isCloseRequested()) {
@@ -170,11 +188,11 @@ public class Trial {
     }
 
     private class SpawnerFactory {
-        private CarSpawner.Function function;
-        private byte[] weights;
-        private int simulationSteps;
-        private double[] params;
-        private double randomDenominator;
+        private final CarSpawner.Function function;
+        private final byte[] weights;
+        private final int simulationSteps;
+        private final double[] params;
+        private final double randomDenominator;
 
         SpawnerFactory(CarSpawner.Function function, byte[] weights, int simulationSteps, double[] params, double randomDenominator) {
             this.function = function;

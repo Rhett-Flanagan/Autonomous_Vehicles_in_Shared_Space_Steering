@@ -3,6 +3,7 @@ package intersectionmanagement.trial;
 import intersectionmanagement.simulator.Utility;
 import intersectionmanagement.simulator.car.Car;
 import intersectionmanagement.simulator.car.Sensor;
+import intersectionmanagement.simulator.obstacle.Obstacle;
 import intersectionmanagement.simulator.pedestrian.Pedestrian;
 import intersectionmanagement.simulator.track.Node;
 import org.apache.commons.lang3.SerializationUtils;
@@ -41,7 +42,7 @@ public class Renderer {
 
     static void setupWindow(String title, Trial trial, float scale, int width, int height, byte[] serializedNetwork) throws LWJGLException {
         Display.setDisplayMode(new DisplayMode(width, height));
-        Display.create(new PixelFormat(8,0,0,8));
+        Display.create(new PixelFormat(8, 0, 0, 8));
         Display.setTitle(String.format("IntersectionManagement - %s", title));
         glLoadIdentity(); // Resets any previous projection matrices
         glOrtho(0, width, height, 0, 1, -1);
@@ -80,14 +81,14 @@ public class Renderer {
     private static void initiateNodePositions() {
         if (neatNetwork != null) {
             Random nodePositionGenerator = new Random();
-            int numNodes = neatNetwork.getOutputIndex()+neatNetwork.getOutputCount();
+            int numNodes = neatNetwork.getOutputIndex() + neatNetwork.getOutputCount();
 
             for (NEATLink link : neatNetwork.getLinks()) {
-                if (link.getFromNeuron()+1 > numNodes) {
-                    numNodes = link.getFromNeuron()+1;
+                if (link.getFromNeuron() + 1 > numNodes) {
+                    numNodes = link.getFromNeuron() + 1;
                 }
-                if (link.getToNeuron()+1 > numNodes) {
-                    numNodes = link.getToNeuron()+1;
+                if (link.getToNeuron() + 1 > numNodes) {
+                    numNodes = link.getToNeuron() + 1;
                 }
             }
 
@@ -96,33 +97,33 @@ public class Renderer {
                 nodeYs.add(0, 0f);
             }
 
-            int inputs = neatNetwork.getInputCount()+1; // Add +1 for the bias gene
+            int inputs = neatNetwork.getInputCount() + 1; // Add +1 for the bias gene
             int outputs = neatNetwork.getOutputCount();
             for (int i = 0; i < inputs; i++) {
-                double y = i*(350.0/(inputs)) + 50;
+                double y = i * (350.0 / (inputs)) + 50;
                 nodeXs.set(i, 450.0f);
                 nodeYs.set(i, (float) y);
             }
 
-            for (int i = neatNetwork.getOutputIndex()+neatNetwork.getOutputCount(); i < numNodes; i++) {
-                nodeXs.set(i, nodePositionGenerator.nextInt(200)+500f);
-                nodeYs.set(i, nodePositionGenerator.nextInt(350)+50f);
+            for (int i = neatNetwork.getOutputIndex() + neatNetwork.getOutputCount(); i < numNodes; i++) {
+                nodeXs.set(i, nodePositionGenerator.nextInt(200) + 500f);
+                nodeYs.set(i, nodePositionGenerator.nextInt(350) + 50f);
             }
 
-            for (int i = 0; i < outputs+2; i++) {
-                if (i == 0 || i == outputs+1) {
+            for (int i = 0; i < outputs + 2; i++) {
+                if (i == 0 || i == outputs + 1) {
                     continue;
                 }
-                double y = i*(350.0/(outputs+2)) + 50;
-                nodeXs.set(neatNetwork.getOutputIndex()+i-1, 750.0f);
-                nodeYs.set(neatNetwork.getOutputIndex()+i-1, (float) y);
+                double y = i * (350.0 / (outputs + 2)) + 50;
+                nodeXs.set(neatNetwork.getOutputIndex() + i - 1, 750.0f);
+                nodeYs.set(neatNetwork.getOutputIndex() + i - 1, (float) y);
             }
         }
     }
 
-    static void drawActors(ArrayList<Car> cars, ArrayList<Pedestrian> pedestrians, List<Node> track) {
+    static void drawActors(ArrayList<Car> cars, ArrayList<Pedestrian> pedestrians, ArrayList<Obstacle> obstacles, List<Node> track) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(binToFloat(0),binToFloat(43),binToFloat(54),1);
+        glClearColor(binToFloat(0), binToFloat(43), binToFloat(54), 1);
 
         List<Node> seenNodes = new LinkedList<>();
         List<Node> currentNodes = new LinkedList<>();
@@ -135,8 +136,7 @@ public class Renderer {
                     if (node.active) {
                         //drawLine(node.x, node.y, nextNode.x, nextNode.y, 2, binToFloat(131), binToFloat(148), binToFloat(150), 1);
                         drawRoad(node.x, node.y, nextNode.x, nextNode.y);
-                    }
-                    else {
+                    } else {
                         //drawLine(node.x, node.y, nextNode.x, nextNode.y, 2, binToFloat(88), binToFloat(110), binToFloat(117), 1);
                         drawRoad(node.x, node.y, nextNode.x, nextNode.y);
                     }
@@ -157,8 +157,8 @@ public class Renderer {
             for (int i = 0; i < 4; i++) {
                 float x = actorX[i];
                 float y = actorY[i];
-                actorX[i] = actor.x + (float)(x*Math.cos(d) - y*Math.sin(d));
-                actorY[i] = actor.y + (float)(y*Math.cos(d) + x*Math.sin(d));
+                actorX[i] = actor.x + (float) (x * Math.cos(d) - y * Math.sin(d));
+                actorY[i] = actor.y + (float) (y * Math.cos(d) + x * Math.sin(d));
             }
             if (actor == lastSelectedActor) {
                 drawQuad(actorX, actorY, binToFloat(108), binToFloat(113), binToFloat(196), 1);
@@ -189,9 +189,12 @@ public class Renderer {
             drawCircle(20, pedestrian.x, pedestrian.y, pedestrian.radius, binToFloat(133), binToFloat(153), binToFloat(0), 1);
         }
 
+        for (Obstacle obstacle : obstacles) {
+            drawCircle(20, obstacle.x, obstacle.y, obstacle.radius, binToFloat(105), binToFloat(235), binToFloat(247), 1);
+        }
 
-        drawLine( 50 - 40, 20, 50 + 40, 20, 12, binToFloat(7), binToFloat(54), binToFloat(66), 1);
-        drawLine( 50 - 40, 30, 50 + 40, 30, 12, binToFloat(7), binToFloat(54), binToFloat(66), 1);
+        drawLine(50 - 40, 20, 50 + 40, 20, 12, binToFloat(7), binToFloat(54), binToFloat(66), 1);
+        drawLine(50 - 40, 30, 50 + 40, 30, 12, binToFloat(7), binToFloat(54), binToFloat(66), 1);
         if (lastSelectedActor != null) {
             if (lastSelectedActor.targetSpeed >= 0) {
                 drawLine(50, 20, 50 + lastSelectedActor.targetSpeed * 40, 20, 12, binToFloat(133), binToFloat(153), binToFloat(0), 1);
@@ -200,9 +203,9 @@ public class Renderer {
             }
 
             if (lastSelectedActor.speed >= 0) {
-                drawLine(50, 30, 50 + (lastSelectedActor.getTurnModifier()/Utility.CAR_TURN_MAX) * 40, 30, 12, binToFloat(133), binToFloat(153), binToFloat(0), 1);
+                drawLine(50, 30, 50 + (lastSelectedActor.getTurnModifier() / Utility.CAR_TURN_MAX) * 40, 30, 12, binToFloat(133), binToFloat(153), binToFloat(0), 1);
             } else {
-                drawLine(50, 30, 50 + (lastSelectedActor.getTurnModifier()/Utility.CAR_TURN_MAX) * 40, 30, 12, binToFloat(220), binToFloat(50), binToFloat(47), 1);
+                drawLine(50, 30, 50 + (lastSelectedActor.getTurnModifier() / Utility.CAR_TURN_MAX) * 40, 30, 12, binToFloat(220), binToFloat(50), binToFloat(47), 1);
             }
 
 
@@ -227,13 +230,13 @@ public class Renderer {
                 int g = 110;
                 int b = 117;
                 if (link.getWeight() > 0) {
-                    r += (int) ((133-88)*(link.getWeight()/5));
-                    g += (int) ((153-110)*(link.getWeight()/5));
-                    b += (int) ((0-117)*(link.getWeight()/5));
+                    r += (int) ((133 - 88) * (link.getWeight() / 5));
+                    g += (int) ((153 - 110) * (link.getWeight() / 5));
+                    b += (int) ((0 - 117) * (link.getWeight() / 5));
                 } else {
-                    r += (int) ((220-88)*(link.getWeight()/-5));
-                    g += (int) ((50-110)*(link.getWeight()/-5));
-                    b += (int) ((47-117)*(link.getWeight()/-5));
+                    r += (int) ((220 - 88) * (link.getWeight() / -5));
+                    g += (int) ((50 - 110) * (link.getWeight() / -5));
+                    b += (int) ((47 - 117) * (link.getWeight() / -5));
                 }
                 drawLine(nodeXs.get(from), nodeYs.get(from), nodeXs.get(to), nodeYs.get(to), 2, binToFloat(r), binToFloat(g), binToFloat(b), 0.5f);
             }
@@ -262,13 +265,13 @@ public class Renderer {
 
         if (basicNetwork != null) {
             for (int l = 0; l < basicNetwork.getLayerCount(); l++) {
-                float x = l*(400.0f/basicNetwork.getLayerCount()) + 450;
-                for (int n = 0; n < basicNetwork.getLayerNeuronCount(l)+2; n++) {
-                    if (n == 0 || n == basicNetwork.getLayerNeuronCount(l)+1) {
+                float x = l * (400.0f / basicNetwork.getLayerCount()) + 450;
+                for (int n = 0; n < basicNetwork.getLayerNeuronCount(l) + 2; n++) {
+                    if (n == 0 || n == basicNetwork.getLayerNeuronCount(l) + 1) {
                         continue;
                     }
-                    float y = n*(350.0f/(basicNetwork.getLayerNeuronCount(l)+1)) + 25;
-                    if (l < basicNetwork.getLayerCount()-1) {
+                    float y = n * (350.0f / (basicNetwork.getLayerNeuronCount(l) + 1)) + 25;
+                    if (l < basicNetwork.getLayerCount() - 1) {
                         for (int n2 = 0; n2 < basicNetwork.getLayerNeuronCount(l + 1) + 2; n2++) {
                             if (n2 == 0 || n2 == basicNetwork.getLayerNeuronCount(l + 1) + 1) {
                                 continue;
@@ -345,7 +348,7 @@ public class Renderer {
                 int x = Mouse.getX();
                 int y = Display.getHeight() - Mouse.getY();
                 for (Car actor : actors) {
-                    if (Utility.distance(x, y, center(actor.x, false), center(actor.y, true)) < actor.radius*scale) {
+                    if (Utility.distance(x, y, center(actor.x, false), center(actor.y, true)) < actor.radius * scale) {
                         if (selectedActors.contains(actor)) {
                             selectedActors.remove(actor);
                         } else {
@@ -362,14 +365,14 @@ public class Renderer {
     }
 
     private static void drawRoad(float x1, float y1, float x2, float y2) {
-        float width = 3.7f/2;
+        float width = 3.7f / 2;
         drawCircle(16, x1, y1, width, binToFloat(88), binToFloat(110), binToFloat(117), 1);
         drawCircle(16, x2, y2, width, binToFloat(88), binToFloat(110), binToFloat(117), 1);
-        double d = Math.atan2(y2-y1, x2-x1);
-        float xOffL = (float) (width*Math.cos(d+Math.PI/2));
-        float xOffR = (float) (width*Math.cos(d-Math.PI/2));
-        float yOffL = (float) (width*Math.sin(d+Math.PI/2));
-        float yOffR = (float) (width*Math.sin(d-Math.PI/2));
+        double d = Math.atan2(y2 - y1, x2 - x1);
+        float xOffL = (float) (width * Math.cos(d + Math.PI / 2));
+        float xOffR = (float) (width * Math.cos(d - Math.PI / 2));
+        float yOffL = (float) (width * Math.sin(d + Math.PI / 2));
+        float yOffR = (float) (width * Math.sin(d - Math.PI / 2));
         float[] x = {x1 + xOffL, x1 + xOffR, x2 + xOffR, x2 + xOffL};
         float[] y = {y1 + yOffL, y1 + yOffR, y2 + yOffR, y2 + yOffL};
         drawQuad(x, y, binToFloat(88), binToFloat(110), binToFloat(117), 1);
@@ -379,10 +382,9 @@ public class Renderer {
         glColor4f(r, g, b, a);
         glBegin(GL_POLYGON);
 
-        for (int i = 0; i < slices; i++)
-        {
-            double rad = (i/(slices*1.0))*2*Math.PI;
-            glVertex2f(center(x, false) + (float) Math.cos(rad)*radius*scale, center(y, true) + (float)Math.sin(rad)*radius*scale);
+        for (int i = 0; i < slices; i++) {
+            double rad = (i / (slices * 1.0)) * 2 * Math.PI;
+            glVertex2f(center(x, false) + (float) Math.cos(rad) * radius * scale, center(y, true) + (float) Math.sin(rad) * radius * scale);
         }
 
         glEnd();
@@ -411,7 +413,7 @@ public class Renderer {
     }
 
     private static float binToFloat(int binary) {
-        return binary/255.0f;
+        return binary / 255.0f;
     }
 
     private static float center(float coord, boolean vertical) {
