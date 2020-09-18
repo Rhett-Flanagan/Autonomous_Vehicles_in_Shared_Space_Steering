@@ -15,47 +15,59 @@ import java.io.Serializable;
 public class CarControllerScore implements CalculateScore, Serializable {
 
     String parameters;
-    int numSims;
+    int numSims, config;
 
     public CarControllerScore(String parameters, int numSims) {
         this.parameters = parameters;
         this.numSims = numSims;
+        config = -1;
+    }
+
+    public CarControllerScore(String parameters, int numSims, int config) {
+        this.parameters = parameters;
+        this.numSims = numSims;
+        this.config = config;
     }
 
     /**
      * Calculate this network's score by running a number of simulations, then taking the average number of collisions across all runs.
+     *
      * @param method The NEATnetwork passed as a MLMethod.
      * @return The average across all runs.
      */
-    public double calculateScore(MLMethod method){
+    public double calculateScore(MLMethod method) {
         NEATNetwork network = (NEATNetwork) method; // The "ML" method passed here should apparently be the network, not the genome
 
         double average = 0;
 
-        for(int i = 0; i < numSims; i++){
+        for (int i = 0; i < numSims; i++) {
             try {
-                Trial trial = new Trial(parameters, SerializationUtils.serialize(network));
+                Trial trial;
+                if (config == -1)
+                    trial = new Trial(parameters, SerializationUtils.serialize(network));
+                else
+                    trial = new Trial(parameters, SerializationUtils.serialize(network), config);
                 trial.setupSim();
-                average += trial.runSimulation();
+                average += trial.runSimulation();//fit;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        return average/(double) numSims;
+        return average / (double) numSims;
     }
 
     /**
      * @return Always true as we aim to minimise the number of collisions
      */
-    public boolean shouldMinimize(){
+    public boolean shouldMinimize() {
         return true;
     }
 
     /**
-     * @return Always true for now, will see if parallel implementation is feasible
+     * @return Use a parallel approach
      */
-    public boolean requireSingleThreaded(){
+    public boolean requireSingleThreaded() {
         return false;
     }
 }

@@ -149,6 +149,14 @@ public class Simulator {
         return collisions / 2;  // there are two actors involved in every collision so collisions ends up doubled, divide by two to get the true number of collisions
     }
 
+    public int getFinishedCars() {
+        return finishedCars;
+    }
+
+    public int getSpawnedCars() {
+        return spawnedCars;
+    }
+
     public ArrayList<Car> getCars() {
         return carArray;
     }

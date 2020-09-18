@@ -58,24 +58,31 @@ public class Trial {
         pedestrianRandomness = spawner.getFloat("pedestrian_randomness");
         pedestrianRate = spawner.getInt("pedestrian_rate");
         SpawnerFactory spawnerFactory;
+
+        int config = 0;
+
+        if (jsonParameters.has("config")) {
+            config = jsonParameters.getInt("config");
+        }
+
         switch (spawnerType) {
             case "constant":
                 double[] params = new double[1];
                 params[0] = spawner.getInt("period");
-                spawnerFactory = new SpawnerFactory(CONSTANT, serializedNetwork, simulationSteps, params, randomness);
+                spawnerFactory = new SpawnerFactory(CONSTANT, serializedNetwork, simulationSteps, params, randomness, config);
                 break;
             case "linear":
                 params = new double[2];
                 params[0] = spawner.getInt("min_period");
                 params[1] = spawner.getInt("max_period");
-                spawnerFactory = new SpawnerFactory(LINEAR, serializedNetwork, simulationSteps, params, randomness);
+                spawnerFactory = new SpawnerFactory(LINEAR, serializedNetwork, simulationSteps, params, randomness, config);
                 break;
             case "sin":
                 params = new double[3];
                 params[0] = spawner.getDouble("period_mul");
                 params[1] = spawner.getInt("min_period");
                 params[2] = spawner.getInt("max_period");
-                spawnerFactory = new SpawnerFactory(SIN, serializedNetwork, simulationSteps, params, randomness);
+                spawnerFactory = new SpawnerFactory(SIN, serializedNetwork, simulationSteps, params, randomness, config);
                 break;
             default:
                 LOGGER.severe(String.format("%s is not a valid spawner type", spawnerType));
@@ -96,24 +103,31 @@ public class Trial {
         pedestrianRandomness = spawner.getFloat("pedestrian_randomness");
         pedestrianRate = spawner.getInt("pedestrian_rate");
         SpawnerFactory spawnerFactory;
+
+        int config = 0;
+
+        if (jsonParameters.has("config")) {
+            config = jsonParameters.getInt("config");
+        }
+
         switch (spawnerType) {
             case "constant":
                 double[] params = new double[1];
                 params[0] = spawner.getInt("period");
-                spawnerFactory = new SpawnerFactory(CONSTANT, serializedNetwork, simulationSteps, params, randomness);
+                spawnerFactory = new SpawnerFactory(CONSTANT, serializedNetwork, simulationSteps, params, randomness, config);
                 break;
             case "linear":
                 params = new double[2];
                 params[0] = spawner.getInt("min_period");
                 params[1] = spawner.getInt("max_period");
-                spawnerFactory = new SpawnerFactory(LINEAR, serializedNetwork, simulationSteps, params, randomness);
+                spawnerFactory = new SpawnerFactory(LINEAR, serializedNetwork, simulationSteps, params, randomness, config);
                 break;
             case "sin":
                 params = new double[3];
                 params[0] = spawner.getDouble("period_mul");
                 params[1] = spawner.getInt("min_period");
                 params[2] = spawner.getInt("max_period");
-                spawnerFactory = new SpawnerFactory(SIN, serializedNetwork, simulationSteps, params, randomness);
+                spawnerFactory = new SpawnerFactory(SIN, serializedNetwork, simulationSteps, params, randomness, config);
                 break;
             default:
                 LOGGER.severe(String.format("%s is not a valid spawner type", spawnerType));
@@ -121,6 +135,46 @@ public class Trial {
         }
         this.spawnerFactory = spawnerFactory;
     }
+
+    public Trial(String parameters, byte[] serializedNetwork, int config) {
+        JSONObject jsonParameters = new JSONObject(parameters);
+        this.serializedNetwork = serializedNetwork;
+        seed = (int) (Math.random() * 1000);//jsonParameters.getInt("seed");
+        trackFile = jsonParameters.getString("track");
+        simulationSteps = jsonParameters.getInt("steps");
+        JSONObject spawner = jsonParameters.getJSONObject("spawner");
+        String spawnerType = spawner.getString("type");
+        double randomness = spawner.getDouble("randomness");
+        pedestrianRandomness = spawner.getFloat("pedestrian_randomness");
+        pedestrianRate = spawner.getInt("pedestrian_rate");
+        SpawnerFactory spawnerFactory;
+
+        switch (spawnerType) {
+            case "constant":
+                double[] params = new double[1];
+                params[0] = spawner.getInt("period");
+                spawnerFactory = new SpawnerFactory(CONSTANT, serializedNetwork, simulationSteps, params, randomness, config);
+                break;
+            case "linear":
+                params = new double[2];
+                params[0] = spawner.getInt("min_period");
+                params[1] = spawner.getInt("max_period");
+                spawnerFactory = new SpawnerFactory(LINEAR, serializedNetwork, simulationSteps, params, randomness, config);
+                break;
+            case "sin":
+                params = new double[3];
+                params[0] = spawner.getDouble("period_mul");
+                params[1] = spawner.getInt("min_period");
+                params[2] = spawner.getInt("max_period");
+                spawnerFactory = new SpawnerFactory(SIN, serializedNetwork, simulationSteps, params, randomness, config);
+                break;
+            default:
+                LOGGER.severe(String.format("%s is not a valid spawner type", spawnerType));
+                throw new RuntimeException("No valid spawner specified in trial parameters");
+        }
+        this.spawnerFactory = spawnerFactory;
+    }
+
 
     public void setupSim() throws IOException {
         track = TrackParser.parseTrack(trackFile, false);
@@ -187,10 +241,19 @@ public class Trial {
         simulating = !simulating;
     }
 
+    public int getSpawnedCars() {
+        return sim.getSpawnedCars();
+    }
+
+    public int getFinishedCars() {
+        return sim.getFinishedCars();
+    }
+
     private class SpawnerFactory {
         private final CarSpawner.Function function;
         private final byte[] weights;
         private final int simulationSteps;
+        private final int config;
         private final double[] params;
         private final double randomDenominator;
 
@@ -200,10 +263,20 @@ public class Trial {
             this.simulationSteps = simulationSteps;
             this.params = params;
             this.randomDenominator = randomDenominator;
+            this.config = 0;
+        }
+
+        SpawnerFactory(CarSpawner.Function function, byte[] weights, int simulationSteps, double[] params, double randomDenominator, int config) {
+            this.function = function;
+            this.weights = weights;
+            this.simulationSteps = simulationSteps;
+            this.params = params;
+            this.randomDenominator = randomDenominator;
+            this.config = config;
         }
 
         Actor getSpawner(Simulator sim, Node startNode) {
-            return new CarSpawner(sim, startNode, weights, simulationSteps, function, params, randomDenominator);
+            return new CarSpawner(sim, startNode, weights, simulationSteps, function, params, randomDenominator, config);
         }
     }
 }
