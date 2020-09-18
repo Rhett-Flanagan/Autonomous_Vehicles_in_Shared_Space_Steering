@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>IntersectionManagement</groupId>
-    <artifactId>Simulator</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>Experiement</artifactId>
+    <version>NEAT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -42,7 +42,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>intersectionmanagement.trial.Main</mainClass>
+                            <mainClass>train.Experiment</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

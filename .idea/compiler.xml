@@ -7,9 +7,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Simulator_Steering" />
+        <module name="Experiement" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Experiement" target="1.8" />
       <module name="Simulator_Steering" target="1.8" />
     </bytecodeTargetLevel>
   </component>
